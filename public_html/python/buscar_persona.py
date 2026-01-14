@@ -16,7 +16,7 @@ try:
             print(json.dumps({
                 "encontrado": True,
                 "nombre": persona["nombre"],
-                "prioridad": persona["prioridad"]
+                "edad": persona["edad"]
             }))
             sys.exit(0)
 
