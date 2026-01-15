@@ -1,42 +1,27 @@
 <?php
+header('Content-Type: application/json; charset=utf-8');
 
-if (!isset($_POST["nombre"])) {
-    die("No se recibió el nombre");
+// Obtener el parámetro de búsqueda
+$busqueda = isset($_GET['nombre']) ? $_GET['nombre'] : '';
+
+// Leer el archivo JSON
+$jsonData = file_get_contents('datos.json');
+$lugares = json_decode($jsonData, true);
+
+// Si no hay búsqueda, devolver todo
+if (empty($busqueda)) {
+    echo json_encode($lugares);
+    exit;
 }
 
-$nombre = trim($_POST["nombre"]);
+// Filtrar por nombre (búsqueda parcial, case-insensitive)
+$resultados = array_filter($lugares, function($lugar) use ($busqueda) {
+    return stripos($lugar['nombre'], $busqueda) !== false;
+});
 
-if ($nombre === "") {
-    die("Nombre vacío");
-}
+// Resetear índices del array
+$resultados = array_values($resultados);
 
-// Escapar argumento
-$nombre_escapado = escapeshellarg($nombre);
-
-// Rutas
-$python = "/usr/bin/python3"; // puede variar
-$script = __DIR__ . "/python/buscar_persona.py";
-
-// Ejecutar
-$comando = "$python $script $nombre_escapado";
-$salida = shell_exec($comando);
-
-if ($salida === null) {
-    die("Error ejecutando Python");
-}
-
-// Decodificar respuesta
-$respuesta = json_decode($salida, true);
-
-if (isset($respuesta["error"])) {
-    die("Error Python: " . $respuesta["error"]);
-}
-
-// Mostrar resultado
-if ($respuesta["encontrado"]) {
-    echo "Persona encontrada:<br>";
-    echo "Nombre: " . htmlspecialchars($respuesta["nombre"]) . "<br>";
-    echo "Edad: " . $respuesta["edad"];
-} else {
-    echo "Persona no encontrada";
-}
+// Devolver resultados
+echo json_encode($resultados);
+?>

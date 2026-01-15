@@ -2,18 +2,187 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Buscar Persona</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Lugares</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        #resultados {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .lugar {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .lugar:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .lugar h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .lugar p {
+            color: #666;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .categoria {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .no-resultados {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 18px;
+        }
+        
+        .coordenadas {
+            color: #888;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>🗺️ Buscador de Lugares</h1>
+        
+        <div class="search-box">
+            <input type="text" id="busqueda" placeholder="Busca un lugar por nombre...">
+            <button onclick="buscar()">Buscar</button>
+        </div>
+        
+        <div id="resultados"></div>
+    </div>
 
-<h2>Buscar persona</h2>
-
-<form method="POST" action="buscar.php">
-    <label>Nombre completo:</label><br><br>
-    <input type="text" name="nombre" required>
-    <br><br>
-    <button type="submit">Buscar</button>
-</form>
-
+    <script>
+        // Función para buscar
+        function buscar() {
+            const busqueda = document.getElementById('busqueda').value;
+            const resultadosDiv = document.getElementById('resultados');
+            
+            // Mostrar mensaje de carga
+            resultadosDiv.innerHTML = '<div class="no-resultados">Buscando...</div>';
+            
+            // Hacer petición al PHP
+            fetch(`buscar.php?nombre=${encodeURIComponent(busqueda)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        resultadosDiv.innerHTML = '<div class="no-resultados">No se encontraron resultados</div>';
+                        return;
+                    }
+                    
+                    // Mostrar resultados
+                    let html = '';
+                    data.forEach(lugar => {
+                        html += `
+                            <div class="lugar">
+                                <h3>${lugar.nombre}</h3>
+                                <p><strong>📍 Dirección:</strong> ${lugar.direccion}</p>
+                                <span class="categoria">${lugar.categoria}</span>
+                                <p class="coordenadas">Lat: ${lugar.lat}, Lng: ${lugar.lng}</p>
+                            </div>
+                        `;
+                    });
+                    
+                    resultadosDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    resultadosDiv.innerHTML = '<div class="no-resultados">Error al buscar. Por favor intenta de nuevo.</div>';
+                    console.error('Error:', error);
+                });
+        }
+        
+        // Permitir buscar con Enter
+        document.getElementById('busqueda').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                buscar();
+            }
+        });
+        
+        // Cargar todos los resultados al inicio
+        window.onload = function() {
+            buscar();
+        };
+    </script>
 </body>
 </html>
